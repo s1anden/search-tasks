@@ -1,0 +1,15 @@
+<ul id="queries">
+  {{#each queries}}
+    {{#ifCond this.tabId '==' ../currentTab}}
+      <li data-queryId="{{this.queryId}}" class="selected">
+        <span class="glyphicon glyphicon-ok"></span>
+        <div>{{this.query}}</div>
+      </li>
+    {{else}}
+      <li data-queryId="{{this.queryId}}">{{this.query}}</li>
+    {{/ifCond}}
+  {{/each}}
+</ul>
+<div class="button-bar">
+  <button type="button" id="nextStep" class="btn btn-primary btn-sm">Next</button>
+</div>
