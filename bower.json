@@ -20,6 +20,9 @@
     "javascript-state-machine": "~2.3.5",
     "uri.js": "~1.14.1",
     "bootstrap": "~3.3.2",
-    "angular-bootstrap": "~0.12.0"
+    "angular-bootstrap": "~0.12.0",
+    "bluebird": "~2.9.6",
+    "taffydb": "nhahn/taffydb#master",
+    "d3": "~3.5.4"
   }
 }

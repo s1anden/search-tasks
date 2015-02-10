@@ -8,19 +8,21 @@
     "tabs",
     "storage",
     "activeTab",
-    "notifications"
+    "notifications",
+    "history",
+    "webNavigation"
   ],
   "background": {
-    "page": "html/background.html",
+    "page": "dist/html/background.html",
     "persistent": false
   },
   "browser_action": {
-    "default_icon": "img/structify_medium.png",
+    "default_icon": "dist/img/structify_medium.png"
   },
   "icons": {
-    "16": "img/structify_small.png",
-    "48": "img/structify_medium.png",
-    "128": "img/structify.png"
+    "16": "dist/img/structify_small.png",
+    "48": "dist/img/structify_medium.png",
+    "128": "dist/img/structify.png"
   }
 
 }
