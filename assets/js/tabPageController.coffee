@@ -42,9 +42,9 @@ app.config ($stateProvider, $urlRouterProvider) ->
         #Get our list of queries
         queryUpdate = () ->
           $scope.$apply () ->
-            $scope.queries = SearchInfo.db()
-        $scope.queries = SearchInfo.db()
-        $scope.query = $scope.queries.first()
+            $scope.queries = SearchInfo.db().get()
+        $scope.queries = SearchInfo.db().get()
+        $scope.query = $scope.queries[0]
         #Initialize everything for d3
         d3_tree.init_vis()
         toggleAll = (d) ->

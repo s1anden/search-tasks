@@ -55,11 +55,11 @@ app.config(function($stateProvider, $urlRouterProvider) {
       var queryUpdate, toggleAll, updateFn;
       queryUpdate = function() {
         return $scope.$apply(function() {
-          return $scope.queries = SearchInfo.db();
+          return $scope.queries = SearchInfo.db().get();
         });
       };
-      $scope.queries = SearchInfo.db();
-      $scope.query = $scope.queries.first();
+      $scope.queries = SearchInfo.db().get();
+      $scope.query = $scope.queries[0];
       d3_tree.init_vis();
       toggleAll = function(d) {
         if (d.children) {

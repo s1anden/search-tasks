@@ -20,7 +20,7 @@ style(type="text/css").
 
 .row
   .col-md-3
-    input(type="text" ng-model="query" typeahead="item.name for item in queries | filter:$viewValue | limitTo:8" class="form-control")
+    select(ng-model="query" class="form-control" ng-options="item as item.name for item in queries")
   .col-md-9
 .row#tree
 
