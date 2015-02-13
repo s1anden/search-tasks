@@ -33,6 +33,19 @@ app.config(function($stateProvider, $urlRouterProvider) {
             })
           ];
         }));
+        $.ajax({
+          type: "POST",
+          url: 'http://127.0.0.1:5000/',
+          async: false,
+          data: {
+            'groups': JSON.stringify(grouped)
+          },
+          success: function(results) {
+            console.log('onSuccess');
+            return grouped = JSON.parse(results);
+          }
+        });
+        console.log('onComplete');
         if (!apply) {
           return $scope.$apply(function() {
             return $scope.pages = _.pick(grouped, function(val, key, obj) {
