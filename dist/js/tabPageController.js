@@ -36,12 +36,12 @@ app.config(function($stateProvider, $urlRouterProvider) {
         if (!apply) {
           return $scope.$apply(function() {
             return $scope.pages = _.pick(grouped, function(val, key, obj) {
-              return Object.keys(val).length > 2;
+              return key.length > 2;
             });
           });
         } else {
           return $scope.pages = _.pick(grouped, function(val, key, obj) {
-            return Object.keys(val).length > 2;
+            return key.length > 2;
           });
         }
       };

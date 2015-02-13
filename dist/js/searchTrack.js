@@ -74,6 +74,41 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   }
 });
 
+chrome.webNavigation.onDOMContentLoaded.addListener(function(details) {
+  var searchInfo;
+  console.log('_a');
+  searchInfo = SearchInfo.db({
+    tabs: {
+      has: details.tabId
+    }
+  });
+  console.log(details);
+  if (searchInfo.first()) {
+    console.log('_b');
+    return chrome.tabs.get(details.tabId, function(tab) {
+      var pages;
+      pages = PageInfo.db({
+        tab: details.tabId
+      }).order("date desc");
+      if (pages.first()) {
+        console.log('_c');
+        return chrome.tabs.executeScript(details.tabId, {
+          code: 'window.document.documentElement.innerHTML'
+        }, function(results) {
+          var insert_obj;
+          console.log('_d');
+          console.log(results);
+          insert_obj = {
+            html: results[0]
+          };
+          pages.update(insert_obj);
+          return console.log(PageInfo.db());
+        });
+      }
+    });
+  }
+});
+
 chrome.webNavigation.onCommitted.addListener(function(details) {
   var pages, search, searchInfo;
   searchInfo = SearchInfo.db({
@@ -114,14 +149,14 @@ chrome.webNavigation.onCommitted.addListener(function(details) {
           console.log('e1');
           return chrome.tabs.get(details.tabId, function(tab) {
             var insert_obj;
-            insert_obj = {
-              url: details.url,
-              title: tab.title
-            };
             pages = PageInfo.db({
               tab: details.tabId
             }).order("date desc");
             if (pages.first()) {
+              insert_obj = {
+                url: details.url,
+                title: tab.title
+              };
               return pages.update(insert_obj);
             }
           });

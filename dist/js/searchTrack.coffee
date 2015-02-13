@@ -35,6 +35,24 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
         PageInfo.db.insert({url: changeInfo.url, query: query, tab: tabId, date: Date.now(), referrer: null, visits: 1, title: tab.title})
       else
         searchTrack.addTab(searchInfo, tabId)
+
+chrome.webNavigation.onDOMContentLoaded.addListener((details) ->
+  console.log '_a'
+  searchInfo = SearchInfo.db({tabs: {has: details.tabId}})
+  console.log details
+  if searchInfo.first()
+    console.log '_b'
+    chrome.tabs.get details.tabId, (tab) ->
+      pages = PageInfo.db({tab: details.tabId}).order("date desc")
+      if pages.first()
+        console.log '_c'
+        chrome.tabs.executeScript details.tabId, {code: 'window.document.documentElement.innerHTML'}, (results) ->
+          console.log '_d'
+          console.log results
+          insert_obj = {html: results[0]}
+          pages.update(insert_obj)
+          console.log PageInfo.db()
+)
   
 chrome.webNavigation.onCommitted.addListener((details) ->
   #see what searches have been performed in this tab before
@@ -61,9 +79,9 @@ chrome.webNavigation.onCommitted.addListener((details) ->
         if details.transitionQualifiers.indexOf("client_redirect") > -1
           console.log 'e1'
           chrome.tabs.get details.tabId, (tab) ->
-            insert_obj = {url: details.url, title: tab.title}
             pages = PageInfo.db({tab: details.tabId}).order("date desc")
             if pages.first()
+              insert_obj = {url: details.url, title: tab.title}
               pages.update(insert_obj)
         else
           console.log 'e2'

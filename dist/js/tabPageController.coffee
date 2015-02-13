@@ -13,8 +13,11 @@ app.config ($stateProvider, $urlRouterProvider) ->
       controller: ($scope, $state) ->
         updateFn = (apply) ->
           page_info = PageInfo.db().get()
+          # {query: [record, record,..], ...}
           grouped = _.groupBy page_info, (record) ->
             record.query
+          
+          # [{query, {url: [record, record, ...]}}, ...]
           grouped = _.object _.map grouped, (val,key) ->
             [key, _.groupBy val, (record) ->
               uri = new URI(record.url)
@@ -27,10 +30,10 @@ app.config ($stateProvider, $urlRouterProvider) ->
           if !apply
             $scope.$apply () ->
               $scope.pages = _.pick grouped, (val, key, obj) ->
-                Object.keys(val).length > 2
+                key.length > 2
           else
             $scope.pages = _.pick grouped, (val, key, obj) ->
-                Object.keys(val).length > 2
+              key.length > 2
         updateFn(true)
         # SearchInfo.updateFunction(updateFn)
         PageInfo.updateFunction(updateFn)          
