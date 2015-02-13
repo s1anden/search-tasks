@@ -26,3 +26,7 @@ coverage
 #dont include bower components .. thats just for us
 bower_components
 .DS_Store
+
+#vim
+.*.swp
+.*.swo

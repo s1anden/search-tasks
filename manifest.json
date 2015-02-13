@@ -10,7 +10,9 @@
     "activeTab",
     "notifications",
     "history",
-    "webNavigation"
+    "webNavigation",
+    "http://*/",
+    "https://*/"
   ],
   "background": {
     "page": "dist/html/background.html",
