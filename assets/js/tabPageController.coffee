@@ -27,6 +27,17 @@ app.config ($stateProvider, $urlRouterProvider) ->
                 record.hash = hash
               return uri.toString()
             ]
+          $.ajax
+            type: "POST",
+            url: 'http://127.0.0.1:5000/',
+            async:false,
+            #data: {'groups': JSON.stringify([['html1', 'html2'], ['html3', 'html4']])},
+            data: {'groups': JSON.stringify(grouped)},
+            success: (results) ->
+              console.log 'onSuccess'
+              grouped = JSON.parse results
+
+          console.log 'onComplete'
           if !apply
             $scope.$apply () ->
               $scope.pages = _.pick grouped, (val, key, obj) ->

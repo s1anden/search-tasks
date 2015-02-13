@@ -10,4 +10,6 @@
           i.pull-right.glyphicon(ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}")
         .list-group
           .list-group-item(ng-repeat="record in records") 
+            {{record.tfidf}}
+            br
             a(href="{{record.url}}") {{record.url}}
