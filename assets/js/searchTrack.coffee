@@ -43,13 +43,13 @@ chrome.webNavigation.onDOMContentLoaded.addListener((details) ->
   if searchInfo.first()
     console.log '_b'
     chrome.tabs.get details.tabId, (tab) ->
-      pages = PageInfo.db({tab: details.tabId}).order("date desc")
+      pages = PageInfo.db({tab: details.tabId}, {url: tab.url}).order("date desc")
       if pages.first()
         console.log '_c'
         chrome.tabs.executeScript details.tabId, {code: 'window.document.documentElement.innerHTML'}, (results) ->
           console.log '_d'
           console.log results
-          insert_obj = {html: results[0]}
+          insert_obj = {html: results[0], title: tab.title}
           pages.update(insert_obj)
           console.log PageInfo.db()
 )
@@ -81,7 +81,7 @@ chrome.webNavigation.onCommitted.addListener((details) ->
           chrome.tabs.get details.tabId, (tab) ->
             pages = PageInfo.db({tab: details.tabId}).order("date desc")
             if pages.first()
-              insert_obj = {url: details.url, title: tab.title}
+              insert_obj = {url: details.url}
               pages.update(insert_obj)
         else
           console.log 'e2'
