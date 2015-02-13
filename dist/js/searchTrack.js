@@ -81,9 +81,11 @@ chrome.webNavigation.onCommitted.addListener(function(details) {
       has: details.tabId
     }
   });
+  console.log(details);
   if (details.transitionQualifiers.indexOf("from_address_bar") > -1) {
     if (searchInfo.first()) {
-      return searchTrack.removeTab(searchInfo, details.tabId);
+      searchTrack.removeTab(searchInfo, details.tabId);
+      return console.log('a');
     }
   } else if (details.transitionType === "link" || details.transitionType === "form_submit") {
     if (details.transitionQualifiers.indexOf("forward_back") > -1) {
@@ -95,48 +97,73 @@ chrome.webNavigation.onCommitted.addListener(function(details) {
         }, {
           url: details.url
         });
+        console.log('b');
         if (pages.first()) {
-          return pages.update({
+          pages.update({
             visits: pages.first().visits + 1,
             date: Date.now()
           });
+          return console.log('c');
         }
       }
     } else {
+      console.log('d');
       if (searchInfo.first()) {
-        return chrome.tabs.get(details.tabId, function(tab) {
-          var insert_obj;
-          insert_obj = {
-            url: details.url,
-            query: searchInfo.first().name,
-            tab: details.tabId,
-            date: Date.now(),
-            referrer: null,
-            visits: 1,
-            title: tab.title
-          };
-          pages = PageInfo.db({
-            tab: details.tabId
-          }).order("date desc");
-          if (pages.first()) {
-            insert_obj.referrer = pages.first().___id;
-          }
-          return PageInfo.db.insert(insert_obj);
-        });
+        console.log('e');
+        if (details.transitionQualifiers.indexOf("client_redirect") > -1) {
+          console.log('e1');
+          return chrome.tabs.get(details.tabId, function(tab) {
+            var insert_obj;
+            insert_obj = {
+              url: details.url,
+              title: tab.title
+            };
+            pages = PageInfo.db({
+              tab: details.tabId
+            }).order("date desc");
+            if (pages.first()) {
+              return pages.update(insert_obj);
+            }
+          });
+        } else {
+          console.log('e2');
+          return chrome.tabs.get(details.tabId, function(tab) {
+            var insert_obj;
+            insert_obj = {
+              url: details.url,
+              query: searchInfo.first().name,
+              tab: details.tabId,
+              date: Date.now(),
+              referrer: null,
+              visits: 1,
+              title: tab.title
+            };
+            pages = PageInfo.db({
+              tab: details.tabId
+            }).order("date desc");
+            if (pages.first()) {
+              insert_obj.referrer = pages.first().___id;
+            }
+            return PageInfo.db.insert(insert_obj);
+          });
+        }
       }
     }
   } else if (details.transitionType === "auto_bookmark" || details.transitionType === "typed" || details.transitionType === "keyword") {
+    console.log('f');
     pages = PageInfo.db({
       tab: details.tabId
     }, {
       url: details.url
     });
     if (pages.first()) {
+      console.log('g');
       search = SearchInfo.db({
         name: pages.first().query
       });
       return searchTrack.addTab(search, details.tabId);
     } else if (searchInfo.first()) {
+      console.log('h');
       return searchTrack.removeTab(searchInfo, details.tabId);
     }
   }
