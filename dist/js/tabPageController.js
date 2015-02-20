@@ -13,40 +13,57 @@ app.config(function($stateProvider, $urlRouterProvider) {
     templateUrl: '/dist/templates/tabPage/searches.html',
     controller: function($scope, $state) {
       var updateFn;
-      updateFn = function(apply) {
-        var grouped, page_info;
-        page_info = PageInfo.db().get();
-        grouped = _.groupBy(page_info, function(record) {
-          return record.query;
+      $scope.promoteToTask = function(query) {
+        SearchInfo.db({
+          ___id: query.___id
+        }).update({
+          task: true
         });
-        grouped = _.object(_.map(grouped, function(val, key) {
-          return [
-            key, _.groupBy(val, function(record) {
-              var hash, uri;
-              uri = new URI(record.url);
-              hash = uri.hash();
-              if (hash) {
-                uri.hash("");
-                record.hash = hash;
-              }
-              return uri.toString();
-            })
-          ];
+        console.log(SearchInfo.db().get());
+        return updateFn(true);
+      };
+      $scope.addToTask = function(query) {
+        var searches;
+        SearchInfo.db({
+          ___id: query.___id
+        }).update({
+          task: true
+        });
+        searches = query.parent.children || [];
+        searches.push(query);
+        TaskInfo.db({
+          ___id: query.parent.___id
+        }).update({
+          children: searches
+        });
+        console.log(TaskInfo.db().get({
+          ___id: query.parent.___id
         }));
+        return updateFn(true);
+      };
+      updateFn = function(apply) {
+        var search_info, task_info;
+        search_info = SearchInfo.db().get({
+          task: {
+            "!is": true
+          }
+        });
+        console.log(search_info);
+        task_info = TaskInfo.db().get();
+        console.log(task_info);
         if (!apply) {
           return $scope.$apply(function() {
-            return $scope.pages = _.pick(grouped, function(val, key, obj) {
+            return $scope.searches = _.pick(search_info, function(val, key, obj) {
               return Object.keys(val).length > 2;
             });
           });
         } else {
-          return $scope.pages = _.pick(grouped, function(val, key, obj) {
-            return Object.keys(val).length > 2;
-          });
+          $scope.searches = search_info.reverse();
+          return $scope.tasks = task_info.reverse();
         }
       };
       updateFn(true);
-      return PageInfo.updateFunction(updateFn);
+      return SearchInfo.updateFunction(updateFn);
     }
   }).state('tree', {
     url: '/tree',

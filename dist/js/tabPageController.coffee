@@ -11,29 +11,46 @@ app.config ($stateProvider, $urlRouterProvider) ->
       url: '/'
       templateUrl: '/dist/templates/tabPage/searches.html'
       controller: ($scope, $state) ->
+        $scope.promoteToTask = (query) ->
+          SearchInfo.db({___id: query.___id}).update({task:true})
+          console.log(SearchInfo.db().get())
+          # TaskInfo.db.insert(query)
+          updateFn(true)
+        $scope.addToTask = (query) ->
+          SearchInfo.db({___id: query.___id}).update({task:true})
+          searches = query.parent.children || []
+          searches.push(query)
+          TaskInfo.db({___id: query.parent.___id}).update({children:searches})
+          console.log(TaskInfo.db().get({___id: query.parent.___id}))
+          updateFn(true)
         updateFn = (apply) ->
-          page_info = PageInfo.db().get()
-          grouped = _.groupBy page_info, (record) ->
-            record.query
-          grouped = _.object _.map grouped, (val,key) ->
-            [key, _.groupBy val, (record) ->
-              uri = new URI(record.url)
-              hash = uri.hash()
-              if (hash)
-                uri.hash("")
-                record.hash = hash
-              return uri.toString()
-            ]
+          search_info = SearchInfo.db().get({task: {"!is": true}})
+          console.log(search_info)
+          task_info = TaskInfo.db().get()
+          console.log(task_info)
+          # grouped = _.groupBy page_info, (record) ->
+          #   record.query
+          # grouped = _.object _.map grouped, (val,key) ->
+          #   [key, _.groupBy val, (record) ->
+          #     uri = new URI(record.url)
+          #     hash = uri.hash()
+          #     if (hash)
+          #       uri.hash("")
+          #       record.hash = hash
+          #     return uri.toString()
+          #   ]
           if !apply
             $scope.$apply () ->
-              $scope.pages = _.pick grouped, (val, key, obj) ->
+              $scope.searches = _.pick search_info, (val, key, obj) ->
                 Object.keys(val).length > 2
           else
-            $scope.pages = _.pick grouped, (val, key, obj) ->
-                Object.keys(val).length > 2
+            # $scope.pages = _.pick grouped, (val, key, obj) ->
+            #     Object.keys(val).length > 2
+            $scope.searches = search_info.reverse()
+            $scope.tasks = task_info.reverse()
         updateFn(true)
-        # SearchInfo.updateFunction(updateFn)
-        PageInfo.updateFunction(updateFn)          
+        SearchInfo.updateFunction(updateFn)
+        # PageInfo.updateFunction(updateFn)          
       })
     .state('tree', {
       url: '/tree'

@@ -135,4 +135,58 @@ window.PageInfo = (function() {
   return obj;
 })();
 
+window.TaskInfo = (function() {
+  var obj, settings, updateFunction, updateID;
+  obj = {};
+  obj.db = TAFFY();
+  updateID = generateUUID();
+  updateFunction = null;
+  settings = {
+    template: {},
+    onDBChange: function() {
+      return chrome.storage.local.set({
+        'tasks': {
+          db: this,
+          updateId: updateID
+        }
+      });
+    }
+  };
+  chrome.storage.onChanged.addListener(function(changes, areaName) {
+    if (changes.tasks != null) {
+      if (changes.tasks.newValue == null) {
+        obj.db = TAFFY();
+        obj.db.settings(settings);
+        if (updateFunction != null) {
+          return updateFunction();
+        }
+      } else if (changes.tasks.newValue.updateid !== updateID) {
+        obj.db = TAFFY(changes.tasks.newValue.db, false);
+        obj.db.settings(settings);
+        if (updateFunction != null) {
+          return updateFunction();
+        }
+      }
+    }
+  });
+  chrome.storage.local.get('tasks', function(retVal) {
+    if (retVal.tasks != null) {
+      obj.db = TAFFY(retVal.tasks.db);
+    }
+    obj.db.settings(settings);
+    if (updateFunction != null) {
+      return updateFunction();
+    }
+  });
+  obj.clearDB = function() {
+    chrome.storage.local.remove('tasks');
+    return obj.db = TAFFY();
+  };
+  obj.db.settings(settings);
+  obj.updateFunction = function(fn) {
+    return updateFunction = fn;
+  };
+  return obj;
+})();
+
 //# sourceMappingURL=trackAPI.js.map

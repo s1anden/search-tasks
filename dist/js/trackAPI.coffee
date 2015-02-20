@@ -102,3 +102,42 @@ window.PageInfo = (() ->
   return obj
 
 )()
+
+window.TaskInfo = (() ->
+  obj = {}
+  obj.db = TAFFY()
+  #Lets us track which running version of this file is actually updating the DB
+  updateID = generateUUID()
+  updateFunction = null
+  settings =
+    template: {}
+    onDBChange: () ->
+      chrome.storage.local.set {'tasks': {db: this, updateId: updateID}}
+  
+  #Grab the info from localStorage and lets update it
+  chrome.storage.onChanged.addListener (changes, areaName) ->
+    if changes.tasks? 
+      if !changes.tasks.newValue?
+        obj.db = TAFFY()
+        obj.db.settings(settings)
+        updateFunction() if updateFunction?
+      else if changes.tasks.newValue.updateid != updateID
+        obj.db = TAFFY(changes.tasks.newValue.db, false)
+        obj.db.settings(settings)
+        updateFunction() if updateFunction?
+        
+  chrome.storage.local.get 'tasks', (retVal) ->
+    if retVal.tasks?
+      obj.db = TAFFY(retVal.tasks.db)
+    obj.db.settings(settings)
+    updateFunction() if updateFunction?
+      
+  obj.clearDB = () ->
+    chrome.storage.local.remove('tasks')
+    obj.db = TAFFY()
+      
+  obj.db.settings(settings)
+  obj.updateFunction = (fn) -> updateFunction = fn
+
+  return obj
+)()
