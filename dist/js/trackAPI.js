@@ -13,9 +13,7 @@
  *  }
  * tab
  */
-var generateUUID;
-
-generateUUID = function() {
+window.generateUUID = function() {
   var d, uuid;
   d = (new Date).getTime();
   uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

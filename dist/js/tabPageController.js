@@ -14,21 +14,16 @@ app.config(function($stateProvider, $urlRouterProvider) {
     controller: function($scope, $state) {
       var updateFn;
       $scope.promoteToTask = function(query) {
-        SearchInfo.db({
+        SearchInfo.db().remove({
           ___id: query.___id
-        }).update({
-          task: true
         });
-        console.log(SearchInfo.db().get());
+        query.searches = [query];
+        query.___id = generateUUID();
+        TaskInfo.db.insert(query);
         return updateFn(true);
       };
       $scope.addToTask = function(query) {
         var searches;
-        SearchInfo.db({
-          ___id: query.___id
-        }).update({
-          task: true
-        });
         searches = query.parent.children || [];
         searches.push(query);
         TaskInfo.db({
@@ -39,15 +34,14 @@ app.config(function($stateProvider, $urlRouterProvider) {
         console.log(TaskInfo.db().get({
           ___id: query.parent.___id
         }));
+        SearchInfo.db().remove({
+          ___id: query.___id
+        });
         return updateFn(true);
       };
       updateFn = function(apply) {
         var search_info, task_info;
-        search_info = SearchInfo.db().get({
-          task: {
-            "!is": true
-          }
-        });
+        search_info = SearchInfo.db().get();
         console.log(search_info);
         task_info = TaskInfo.db().get();
         console.log(task_info);

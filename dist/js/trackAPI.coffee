@@ -14,7 +14,7 @@
 ###
 
       
-generateUUID = ->
+window.generateUUID = ->
   d = (new Date).getTime()
   uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) ->
     r = (d + Math.random() * 16) % 16 | 0

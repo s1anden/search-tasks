@@ -12,19 +12,22 @@ app.config ($stateProvider, $urlRouterProvider) ->
       templateUrl: '/dist/templates/tabPage/searches.html'
       controller: ($scope, $state) ->
         $scope.promoteToTask = (query) ->
-          SearchInfo.db({___id: query.___id}).update({task:true})
-          console.log(SearchInfo.db().get()) # ****
-          # TaskInfo.db.insert(query)
+          SearchInfo.db().remove({___id: query.___id})
+          query.searches = [query]
+          query.___id = generateUUID()
+          TaskInfo.db.insert(query)
           updateFn(true)
         $scope.addToTask = (query) ->
-          SearchInfo.db({___id: query.___id}).update({task:true})
           searches = query.parent.children || []
           searches.push(query)
           TaskInfo.db({___id: query.parent.___id}).update({children:searches})
           console.log(TaskInfo.db().get({___id: query.parent.___id}))
+          SearchInfo.db().remove({___id: query.___id})
           updateFn(true)
         updateFn = (apply) ->
-          search_info = SearchInfo.db().get({task: {"!is": true}})
+          # SearchInfo.clearDB()
+          # TaskInfo.clearDB()
+          search_info = SearchInfo.db().get()
           console.log(search_info)
           task_info = TaskInfo.db().get()
           console.log(task_info)
@@ -53,7 +56,6 @@ app.config ($stateProvider, $urlRouterProvider) ->
 #           # {query: [record, record,..], ...}
 #           grouped = _.groupBy page_info, (record) ->
 #             record.query
-          
 #           # [{query, {url: [record, record, ...]}}, ...]
 #           grouped = _.object _.map grouped, (val,key) ->
 #             [key, _.groupBy val, (record) ->
