@@ -1,4 +1,9 @@
-app = angular.module('tabApp', ['ui.router', 'ui.bootstrap', 'angular-underscore'])
+underscore = angular.module('underscore', []);
+underscore.factory('_', () ->
+  return window._;
+);
+
+app = angular.module('tabApp', ['ui.router', 'ui.bootstrap', 'angular-underscore', 'underscore', 'ngDraggable', 'xeditable'])
 
 app.run ($rootScope, $state, $stateParams) ->
   $rootScope.$state = $state
@@ -12,82 +17,65 @@ app.config ($stateProvider, $urlRouterProvider) ->
       templateUrl: '/dist/templates/tabPage/searches.html'
       controller: ($scope, $state) ->
         $scope.promoteToTask = (query) ->
-          SearchInfo.db().remove({___id: query.___id})
-          query.searches = [query]
-          query.___id = generateUUID()
-          TaskInfo.db.insert(query)
-          updateFn(true)
-        $scope.addToTask = (query) ->
-          searches = query.parent.children || []
-          searches.push(query)
-          TaskInfo.db({___id: query.parent.___id}).update({children:searches})
-          console.log(TaskInfo.db().get({___id: query.parent.___id}))
-          SearchInfo.db().remove({___id: query.___id})
-          updateFn(true)
-        updateFn = (apply) ->
+          SearchInfo.db({___id:query.___id}).update({task:query.name})
+          updateFn()
+        $scope.addToTask = (query, task) ->
+          # SearchInfo.db({___id: query.___id}).update({task:query.task})
+          # updateFn()
+          console.log(task)
+        $scope.todo = (tab) ->
+          PageInfo.db({___id:tab.___id}).update({status:"todo"})
+          updateFn()
+        $scope.uncategorize = (tab) ->
+          PageInfo.db({___id:tab.___id}).update({status:undefined})
+          updateFn()
+        $scope.archive = (tab) ->
+          PageInfo.db({___id:tab.___id}).update({status:"archive"})
+          updateFn()
+        $scope.discard = (tab) ->
+          PageInfo.db({___id:tab.___id}).update({status:"discard"})
+          updateFn()
+        $scope.changeTaskName = (curr, updated) ->
+          SearchInfo.db({task:curr}).update({task:updated});
+          updateFn()
+        updateFn = () ->
           # SearchInfo.clearDB()
-          # TaskInfo.clearDB()
-          search_info = SearchInfo.db().get()
-          console.log(search_info)
-          task_info = TaskInfo.db().get()
-          console.log(task_info)
-          # grouped = _.groupBy page_info, (record) ->
-          #   record.query
-          # grouped = _.object _.map grouped, (val,key) ->
-          #   [key, _.groupBy val, (record) ->
-          #     uri = new URI(record.url)
-          #     hash = uri.hash()
-          #     if (hash)
-          #       uri.hash("")
-          #       record.hash = hash
-          #     return uri.toString()
-          #   ]
-          if !apply
-            $scope.$apply () ->
-              $scope.searches = _.pick search_info, (val, key, obj) ->
-                Object.keys(val).length > 2
-          else
-            # $scope.pages = _.pick grouped, (val, key, obj) ->
-            #     Object.keys(val).length > 2
-            $scope.searches = search_info.reverse()
-            $scope.tasks = task_info.reverse()
-# =======
-#           page_info = PageInfo.db().get()
-#           # {query: [record, record,..], ...}
-#           grouped = _.groupBy page_info, (record) ->
-#             record.query
-#           # [{query, {url: [record, record, ...]}}, ...]
-#           grouped = _.object _.map grouped, (val,key) ->
-#             [key, _.groupBy val, (record) ->
-#               uri = new URI(record.url)
-#               hash = uri.hash()
-#               if (hash)
-#                 uri.hash("")
-#                 record.hash = hash
-#               return uri.toString()
-#             ]
-#           $.ajax
-#             type: "POST",
-#             url: 'http://127.0.0.1:5000/',
-#             async:false,
-#             #data: {'groups': JSON.stringify([['html1', 'html2'], ['html3', 'html4']])},
-#             data: {'groups': JSON.stringify(grouped)},
-#             success: (results) ->
-#               console.log 'onSuccess'
-#               grouped = JSON.parse results
+          # PageInfo.clearDB()
 
-#           console.log 'onComplete'
-#           if !apply
-#             $scope.$apply () ->
-#               $scope.pages = _.pick grouped, (val, key, obj) ->
-#                 key.length > 2
-#           else
-#             $scope.pages = _.pick grouped, (val, key, obj) ->
-#               key.length > 2
-# >>>>>>> 1373ba19aff42eede0a6795908db1e8dbd26f0c2
-        updateFn(true)
-        SearchInfo.updateFunction(updateFn) #******
-        # PageInfo.updateFunction(updateFn)          
+          page_info = PageInfo.db().get()
+          search_info = SearchInfo.db().get()
+          # groups pages into sets based on query
+          grouped_pages = _.groupBy page_info, (record) ->
+            record.query
+          # 1. maps grouped pages into an array of format [query, [grouped URIs]]
+          # 2. converts array to an object
+          grouped_pages = _.map grouped_pages, (val,key) ->
+            [(_.find search_info, (search) ->
+              search.name == key
+              ), (_.groupBy (_.groupBy val, (record) ->
+                uri = new URI(record.url)
+                hash = uri.hash()
+                if (hash)
+                  uri.hash("")
+                  record.hash = hash
+                return uri.toString()),
+              (url_group) ->
+                url_group[0].status
+              )
+            ]
+          console.log(grouped_pages)
+
+          grouped_searches = _.groupBy grouped_pages, (search) ->
+            search[0].task
+
+          $scope.searches = (_.filter grouped_pages, (search) ->
+            typeof search[0].task == "undefined"
+          ).reverse()
+          $scope.tasks = _.pick grouped_searches, (val, key, obj) ->
+            key != "undefined"
+        updateFn()
+        # SearchInfo.updateFunction(updateFn) #******
+        # PageInfo.updateFunction(updateFn)
       })
     .state('tree', {
       url: '/tree'
@@ -105,7 +93,7 @@ app.config ($stateProvider, $urlRouterProvider) ->
           if d.children
             d.children.forEach(toggleAll)
             d3_tree.toggle(d)
-            
+
         updateFn = () ->
           page_info = PageInfo.db({query: $scope.query.name}, {referrer: {isNull: false}}).get()
           #Root is the one without the referrer
@@ -114,10 +102,10 @@ app.config ($stateProvider, $urlRouterProvider) ->
           d3_tree.root.x0 = d3_tree.h/2
           d3_tree.root.y0 = 0
           d3_tree.root.name = d3_tree.root.query
-          
+
           _.each page_info, (record) ->
             record.children = []
-            
+
           _.each page_info, (record) ->
             #uri = new URI(record.url)
             record.name = record.url
@@ -128,10 +116,10 @@ app.config ($stateProvider, $urlRouterProvider) ->
             else
               d3_tree.root.children.push(record)
 
-          
+
           d3_tree.root.children.forEach(toggleAll)
           d3_tree.update d3_tree.root  
-        
+
         updateFn()
         SearchInfo.updateFunction(queryUpdate)
         PageInfo.updateFunction(updateFn)
@@ -142,7 +130,7 @@ app.config ($stateProvider, $urlRouterProvider) ->
       url: '/settings'
       templateUrl: '/dist/templates/tabPage/settings.html'
       controller: ($scope, $state, $modal) ->
-        
+
         $scope.openDeleteModal = () ->
           modalInstance = $modal.open {
             templateUrl: 'deleteContent.html',

@@ -1,3 +1,26 @@
+.ng-hide {
+  display:none !important;
+}
+.list-group-item.todo {
+  background-color: #A9B6DE;
+}
+
+.list-group-item.todo a {
+  color:#4265D4;
+}
+
+.list-group-item.archive {
+  background-color: #D2D3D6;
+}
+
+.list-group-item.archive a {
+  color:#B6B7BA;
+}
+
+.panel-heading {
+  overflow:hidden;
+}
+
 ul#queries li {
   list-style-type: none;
   margin-bottom: 10px;

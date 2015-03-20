@@ -1,6 +1,12 @@
-var app;
+var app, underscore;
 
-app = angular.module('tabApp', ['ui.router', 'ui.bootstrap', 'angular-underscore']);
+underscore = angular.module('underscore', []);
+
+underscore.factory('_', function() {
+  return window._;
+});
+
+app = angular.module('tabApp', ['ui.router', 'ui.bootstrap', 'angular-underscore', 'underscore', 'ngDraggable', 'xeditable']);
 
 app.run(function($rootScope, $state, $stateParams) {
   $rootScope.$state = $state;
@@ -14,50 +20,93 @@ app.config(function($stateProvider, $urlRouterProvider) {
     controller: function($scope, $state) {
       var updateFn;
       $scope.promoteToTask = function(query) {
-        SearchInfo.db().remove({
+        SearchInfo.db({
           ___id: query.___id
-        });
-        query.searches = [query];
-        query.___id = generateUUID();
-        TaskInfo.db.insert(query);
-        return updateFn(true);
-      };
-      $scope.addToTask = function(query) {
-        var searches;
-        searches = query.parent.children || [];
-        searches.push(query);
-        TaskInfo.db({
-          ___id: query.parent.___id
         }).update({
-          children: searches
+          task: query.name
         });
-        console.log(TaskInfo.db().get({
-          ___id: query.parent.___id
-        }));
-        SearchInfo.db().remove({
-          ___id: query.___id
-        });
-        return updateFn(true);
+        return updateFn();
       };
-      updateFn = function(apply) {
-        var search_info, task_info;
+      $scope.addToTask = function(query, task) {
+        return console.log(task);
+      };
+      $scope.todo = function(tab) {
+        PageInfo.db({
+          ___id: tab.___id
+        }).update({
+          status: "todo"
+        });
+        return updateFn();
+      };
+      $scope.uncategorize = function(tab) {
+        PageInfo.db({
+          ___id: tab.___id
+        }).update({
+          status: void 0
+        });
+        return updateFn();
+      };
+      $scope.archive = function(tab) {
+        PageInfo.db({
+          ___id: tab.___id
+        }).update({
+          status: "archive"
+        });
+        return updateFn();
+      };
+      $scope.discard = function(tab) {
+        PageInfo.db({
+          ___id: tab.___id
+        }).update({
+          status: "discard"
+        });
+        return updateFn();
+      };
+      $scope.changeTaskName = function(curr, updated) {
+        SearchInfo.db({
+          task: curr
+        }).update({
+          task: updated
+        });
+        return updateFn();
+      };
+      updateFn = function() {
+        var grouped_pages, grouped_searches, page_info, search_info;
+        page_info = PageInfo.db().get();
         search_info = SearchInfo.db().get();
-        console.log(search_info);
-        task_info = TaskInfo.db().get();
-        console.log(task_info);
-        if (!apply) {
-          return $scope.$apply(function() {
-            return $scope.searches = _.pick(search_info, function(val, key, obj) {
-              return Object.keys(val).length > 2;
-            });
-          });
-        } else {
-          $scope.searches = search_info.reverse();
-          return $scope.tasks = task_info.reverse();
-        }
+        grouped_pages = _.groupBy(page_info, function(record) {
+          return record.query;
+        });
+        grouped_pages = _.map(grouped_pages, function(val, key) {
+          return [
+            _.find(search_info, function(search) {
+              return search.name === key;
+            }), _.groupBy(_.groupBy(val, function(record) {
+              var hash, uri;
+              uri = new URI(record.url);
+              hash = uri.hash();
+              if (hash) {
+                uri.hash("");
+                record.hash = hash;
+              }
+              return uri.toString();
+            }), function(url_group) {
+              return url_group[0].status;
+            })
+          ];
+        });
+        console.log(grouped_pages);
+        grouped_searches = _.groupBy(grouped_pages, function(search) {
+          return search[0].task;
+        });
+        $scope.searches = (_.filter(grouped_pages, function(search) {
+          return typeof search[0].task === "undefined";
+        })).reverse();
+        return $scope.tasks = _.pick(grouped_searches, function(val, key, obj) {
+          return key !== "undefined";
+        });
       };
-      updateFn(true);
-      return SearchInfo.updateFunction(updateFn);
+      return updateFn();
     }
   }).state('tree', {
     url: '/tree',

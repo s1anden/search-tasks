@@ -21,6 +21,9 @@
   "browser_action": {
     "default_icon": "dist/img/structify_medium.png"
   },
+  "chrome_url_overrides": {
+    "newtab": "dist/html/newTab.html"
+  },
   "icons": {
     "16": "dist/img/structify_small.png",
     "48": "dist/img/structify_medium.png",

@@ -1,48 +1,88 @@
-//- .panel.panel-default(ng-repeat="(query, url_group) in searches")
-//-   .panel-heading {{url_group.name}}
-//-   .panel-body
-    //- accordion
-    //-   accordion-group(ng-repeat="(url, records) in url_group")
-    //-     accordion-heading
-    //-       | {{url}}
-    //-       .pull-right
-    //-         | {{ records.length }}
-    //-       i.pull-right.glyphicon(ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}")
-    //-     .list-group
-    //-       .list-group-item(ng-repeat="record in records") 
-    //-         a(href="{{record.url}}") {{record.url}}
-
 section
-  .panel.panel-default(ng-repeat="task in tasks")
-    .panel-heading {{task.name}}
+  h3 Tasks
+  .panel.panel-default(ng-repeat="(task, searches) in tasks")
+    .panel-heading 
+      a(href="#" editable-text="task" onbeforesave="changeTaskName(task, $data)"){{task}}
     .panel-body
       accordion
-        accordion-group(ng-repeat="child in task.children")
-          accordion-heading
-            | {{child.name}}
-section
-  .list-group
-    .list-group-item(ng-repeat="query in searches" style="overflow:hidden;")
-      p(style="float:left;") {{query.name}}
-      form.task-actions(style="float:right;")
-        label(for="task") Promote to task
-        input(name="task" type="checkbox" ng-model="query.task" ng-change="promoteToTask(query)" style="margin:0 20px 0 5px;")
-        label(for="parent") Add to task
-        select(name="parent" ng-model="query.parent" class="form-control" ng-options="item as item.name for item in tasks" ng-change="addToTask(query)")
+        accordion-group(ng-repeat="search in searches")
+          accordion-heading {{search[0].name}}
+          div(ng-drop="true" ng-drop-success="todo($data)")
+            h5 Todo
+            p(ng-hide="{{search[1].todo.length > 0}}") There are no tabs in the todo category. Drag some up!
+            .list-group
+              .list-group-item(ng-repeat="tab in search[1].todo" class="todo" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+                a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+                .pull-right(style="overflow:hidden;")
+                    .btn-group
+                      button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                      button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                      button.btn.btn-danger(ng-click="discard(tab[0])") Discard
+          div(ng-drop="true" ng-drop-success="uncategorize($data)")
+            h5 Tabs
+            p(ng-hide="{{search[1].undefined.length > 0}}") There are no uncategorized tabs.
+            .list-group
+              .list-group-item(ng-repeat="tab in search[1].undefined" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+                a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+                .pull-right(style="overflow:hidden;")
+                    .btn-group
+                      button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                      button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                      button.btn.btn-danger(ng-click="discard(tab[0])") Discard
+          div(ng-drop="true" ng-drop-success="archive($data)")
+            h5 Archive
+            p(ng-hide="{{search[1].archive.length > 0}}") There are no archived tabs yet. Drag some down when you're done with them!
+            .list-group
+              .list-group-item(ng-repeat="tab in search[1].archive" class="archive" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+                a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+                .pull-right(style="overflow:hidden;")
+                    .btn-group
+                      button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                      button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                      button.btn.btn-danger(ng-click="discard(tab[0])") Discard
 
-//- .panel.panel-default(ng-repeat="(query, url_group) in pages")
-//-   .panel-heading {{query}}
-//-   .panel-body
-//-     accordion
-//-       accordion-group(ng-repeat="(url, records) in url_group")
-//-         accordion-heading
-//-           | {{url}}
-//-           .pull-right
-//-             | {{ records.length }}
-//-           i.pull-right.glyphicon(ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}")
-//-         .list-group
-//-           .list-group-item(ng-repeat="record in records") 
-//-             {{record.tfidf}}
-//-             br
-//-             a(href="{{record.url}}") {{record.url}}
-//- >>>>>>> 1373ba19aff42eede0a6795908db1e8dbd26f0c2
+section
+  h3 Searches
+  accordion
+    accordion-group(ng-repeat="search in searches" style="overflow:hidden;")
+      accordion-heading(style="overflow:hidden;")
+        | {{search[0].name}}
+        .pull-right
+          form.task-actions
+            label(for="task") Promote to task
+            input(name="task" type="checkbox" ng-model="task" ng-change="promoteToTask(search[0])" style="margin:0 20px 0 5px;")
+            label(for="parent") Add to task
+            select(name="parent" ng-model="parent" class="form-control" ng-options="task as task for (task, searches) in tasks" ng-change="addToTask(search[0], task)")
+      div(ng-drop="true" ng-drop-success="todo($data)")
+        h5 Todo
+        p(ng-hide="{{search[1].todo.length > 0}}") There are no tabs in the todo category. Drag some up!
+        .list-group
+          .list-group-item(ng-repeat="tab in search[1].todo" class="todo" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+            a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+            .pull-right(style="overflow:hidden;")
+                .btn-group
+                  button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                  button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                  button.btn.btn-danger(ng-click="discard(tab[0])") Discard
+      div(ng-drop="true" ng-drop-success="uncategorize($data)")
+        h5 Tabs
+        p(ng-hide="{{search[1].undefined.length > 0}}") There are no uncategorized tabs.
+        .list-group
+          .list-group-item(ng-repeat="tab in search[1].undefined" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+            a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+            .pull-right(style="overflow:hidden;")
+                .btn-group
+                  button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                  button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                  button.btn.btn-danger(ng-click="discard(tab[0])") Discard
+      div(ng-drop="true" ng-drop-success="archive($data)")
+        h5 Archive
+        p(ng-hide="{{search[1].archive.length > 0}}") There are no archived tabs yet. Drag some down when you're done with them!
+        .list-group
+          .list-group-item(ng-repeat="tab in search[1].archive" class="archive" style="overflow:hidden;" ng-drag="true" ng-drag-data="tab[0]")
+            a(href="{{tab[0].url}}") {{tab[0].title || tab[0].url}}
+            .pull-right(style="overflow:hidden;")
+                .btn-group
+                  button.btn.btn-default(ng-click="todo(tab[0])") Todo
+                  button.btn.btn-default(ng-click="archive(tab[0])") Archive
+                  button.btn.btn-danger(ng-click="discard(tab[0])") Discard
